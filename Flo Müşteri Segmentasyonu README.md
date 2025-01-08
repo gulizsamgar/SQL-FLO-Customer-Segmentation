@@ -1,4 +1,4 @@
-Bu proje kapsamında, Flo'nun lomni-channel (hem online hem offline) alışveriş yapan müşterilerinin 2020-2021 yıllarına ait alışveriş davranışları analiz edilmiştir.
+Bu proje kapsamında, Flo'nun omni-channel (hem online hem offline) alışveriş yapan müşterilerinin 2020-2021 yıllarına ait alışveriş davranışları analiz edilmiştir.
 Veri seti, 19.945 gözlem ve 13 değişken içermekte olup, 2.7 MB büyüklüğünde ve müşteri segmentasyonu ile davranış analizi için oldukça zengin bir içeriğe sahiptir.
 
 Proje Teknikleri:

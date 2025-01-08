@@ -28,11 +28,7 @@ Yıllık alışveriş trendleri analiz edilerek müşteri segmentleri oluşturul
 🔹Projenin Faydaları:
 
 İş Zekası: Flo'nun müşteri segmentasyonu sayesinde, en değerli müşteriler ve alışveriş trendleri belirlenerek satış stratejileri daha etkili hale getirildi.
-
 Pazarlama Stratejisi: Müşteri davranışlarına dair derinlemesine analizler, özelleştirilmiş pazarlama kampanyaları oluşturulmasına olanak tanıdı.
-
 Kanal Optimizasyonu: Hem online hem offline satış kanallarının verimliliği analiz edilerek, hangi kanalların daha fazla katkı sağladığı tespit edildi.
-
 Müşteri Deneyimi İyileştirme: Alışveriş sıklığı ve kategori tercihlerine göre yapılan segmentasyon, müşteri deneyimini kişiselleştirerek memnuniyeti artırmaya yardımcı oldu.
-
-Bu proje, veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş alışkanlıkları hakkında anlamlı çıkarımlar yapılmasını sağlayarak, stratejik kararlar için önemli bir veri kaynağı sunm
+Bu proje, veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş alışkanlıkları hakkında anlamlı çıkarımlar yapılmasını sağlayarak, stratejik kararlar için önemli bir veri kaynağı sunmaktadır.

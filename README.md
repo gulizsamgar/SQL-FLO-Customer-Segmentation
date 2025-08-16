@@ -22,6 +22,13 @@ Projede aşağıdaki veri seti kullanıldı:
 
 ## 📋 İçerik
 
+1. Veri Yükleme & Tablo Oluşturma
+2. Temel İstatistikler & Özet Bilgiler
+3. Kanal & Mağaza Bazlı Analizler
+4. Zaman Bazlı Analizler
+5. Kategori & Segment Analizleri
+6. Müşteri Bazlı Performans Analizi
+
 
 <p></p>
 <img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/91f5f6d3-babe-4f2b-ba64-fa76cf934f21" />

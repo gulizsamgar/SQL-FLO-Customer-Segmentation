@@ -43,17 +43,17 @@ Projede aşağıdaki veri seti kullanıldı:
 Projede aşağıdaki SQL teknikleri aktif olarak kullanılmıştır:
 
 - **Pencere Fonksiyonları**: `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` ile müşteri sıralamaları, alışveriş sıklığı ve ciro analizleri
-- **Örnek Çıktı:** En çok alışveriş yapan 100 müşterinin sipariş başına ortalama cirosu hesaplandı.  
+- Örnek Çıktı: En çok alışveriş yapan 100 müşterinin sipariş başına ortalama cirosu hesaplandı.  
 - **Çapraz Uygulama**: `CROSS APPLY` ile mağaza türleri ve kategori kırılımlarının detaylı incelenmesi
-- **Örnek Çıktı:** Birden fazla mağaza türünde alışveriş yapan müşterilerin toplam katkısı ölçüldü.
+- Örnek Çıktı: Birden fazla mağaza türünde alışveriş yapan müşterilerin toplam katkısı ölçüldü.
 - **Ortak Tablo İfadeleri (CTE)**: Karmaşık sorguların okunabilirliği ve tekrar kullanılabilir alt sorguların oluşturulması
-- **Örnek Çıktı:** En yüksek ciroya sahip müşterilerin alışveriş sıklıkları analiz edildi.
+- Örnek Çıktı: En yüksek ciroya sahip müşterilerin alışveriş sıklıkları analiz edildi.
 - **Zaman Fonksiyonları**: `DATEPART()`, `DATEDIFF()` ile alışveriş yılına göre sipariş trendleri ve müşteri kazanımlarının analizi
-- **Örnek Çıktı:** Yıllara göre müşteri kazanımları ve sipariş yoğunlukları belirlendi.
+- Örnek Çıktı: Yıllara göre müşteri kazanımları ve sipariş yoğunlukları belirlendi.
 - **Koşullu Toplama ve Filtreleme**: `HAVING`, conditional aggregation ile segment bazlı alışveriş ve ciro bilgilerinin ayrıştırılması
-- **Örnek Çıktı:** Son 12 ayda en çok ilgi gören kategoriler hesaplandı. 
+- Örnek Çıktı: Son 12 ayda en çok ilgi gören kategoriler hesaplandı. 
 - **JOIN & Alt Sorgular**: Kategori ve kanal kırılımlarında en değerli müşterilerin tespit edilmesi
-- **Örnek Çıktı:** Her kanal özelinde en çok alışveriş yapan müşteri belirlendi.
+- Örnek Çıktı: Her kanal özelinde en çok alışveriş yapan müşteri belirlendi.
 
 ---
 

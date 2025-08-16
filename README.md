@@ -1,9 +1,9 @@
-# 📈 
+# 📈 SQL ile FLO Müşteri Segmentasyonu
 
 ## 🚀 Projeye Genel Bakış
 
-**Komut Dosyaları:** 
-[`FLO Customer Segmentation`](script/FLO Customer Segmentation.sql)
+**Komut Dosyası:** 
+[`FLO Customer Segmentation`](script/FLO_Customer_Segmentation.sql)
 
 
 **Açıklama:** Bu proje kapsamında, Flo’nun omni-channel (hem online hem offline) alışveriş yapan müşterilerinin 2020–2021 yıllarına ait davranışları SQL teknikleri kullanılarak analiz edilmiştir. Müşteri segmentasyonu, alışveriş sıklığı, kanal bazlı performans ve kategori tercihleri detaylı olarak incelenmiştir. Elde edilen çıktılar, müşteri deneyimini kişiselleştirmeye, pazarlama stratejilerini optimize etmeye ve satış kanallarını daha verimli kullanmaya yönelik stratejik içgörüler sunmaktadır.
@@ -12,32 +12,19 @@
 
 ## 📂 Veri Seti Bilgisi
 
-Projede üç veri seti kullanıldı:  
+Projede aşağıdaki veri seti kullanıldı:  
 
-- [**fact_sales.csv**](datasets/csv-files/gold.fact_sales.csv): Sipariş bazında satış detaylarını içerir (tarih, müşteri, ürün, miktar, tutar).  
-- [**dim_customers.csv**](datasets/csv-files/gold.dim_customers.csv): Müşteri bazlı özet bilgileri ve segmentlerini içerir.  
-- [**dim_products.csv**](datasets/csv-files/gold.dim_products.csv): Ürünlerin ad, kategori, alt kategori, maliyet gibi tanımlayıcı bilgilerini içerir.
-
+- [**flo_data_20K.csv**](dataset/flo_data_20K.csv): Müşterilerin alışveriş kanalları, sipariş adetleri, toplam ciroları, kategori tercihleri ve mağaza türleri gibi bilgileri barındırmaktadır.
+- 19.945 gözlem ve 13 değişken içermektedir.
+- Boyutu: 2.7 MB  
 
 ---
 
 ## 📋 İçerik
 
-**Analiz Bölümleri**
-
-1. Zaman İçinde Değişim Analizi (Change Over Time Analysis)
-2. Kümülatif Analiz (Cumulative Analysis)
-3. Performans Analizi (Year-over-Year, Month-over-Month)
-4. Parçadan Bütüne Analiz (Part-to-Whole Analysis)
-5. Veri Segmentasyon Analizi (Data Segmentation Analysis)
-
-**Raporlama Bölümleri**
-
-6. Müşteri Raporu (Customer Report)
-7. Ürün Raporu (Product Report)
 
 <p></p>
-<img width="1312" height="874" alt="image" src="https://github.com/user-attachments/assets/63a62274-b00b-4e36-94f9-a53826488cbb" />
+<img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/91f5f6d3-babe-4f2b-ba64-fa76cf934f21" />
 <p></p>
 
 ---
@@ -54,65 +41,38 @@ Projede üç veri seti kullanıldı:
 
 Projede aşağıdaki SQL teknikleri aktif olarak kullanılmıştır:
 
-- **Date Functions**: `YEAR()`, `MONTH()`, `DATEPART()`, `DATETRUNC()`, `FORMAT()` ile dönemsel gruplama ve zaman serisi analizi
-- **JOIN Türleri**: `LEFT JOIN` ile fact ve dimension tablolarının ilişkilendirilmesi
-- **Aggregation Functions:** `SUM()`, `COUNT()`, `AVG()` ile temel metriklerin hesaplanması
-- **Grouping**: `GROUP BY` ile yıl, ay, kategori, müşteri, ürün bazlı özetleme
-- **Ordering**: `ORDER BY` ile dönemsel veya performans bazlı sıralama
-- **Koşullu Mantık**: `CASE` ile müşteri ve ürün segmentasyonları (VIP, Regular, New vb.)
-- **Window Functions**: `SUM() OVER()`, `AVG() OVER()`, `LAG()` ile kümülatif hesaplama, hareketli ortalama ve dönem karşılaştırmaları
-- **Part-to-Whole Hesaplama**: `SUM(...) OVER()` ile kategori/segment katkı yüzdelerinin çıkarılması
-- **KPI Hesaplamaları**: Recency, AOV (Average Order Value), ortalama aylık harcama/gelir metriklerinin SQL içinde türetilmesi
+- **Pencere Fonksiyonları**: `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()` ile müşteri sıralamaları, alışveriş sıklığı ve ciro analizleri
+- **Örnek Çıktı:** En çok alışveriş yapan 100 müşterinin sipariş başına ortalama cirosu hesaplandı.  
+- **Çapraz Uygulama**: `CROSS APPLY` ile mağaza türleri ve kategori kırılımlarının detaylı incelenmesi
+- **Örnek Çıktı:** Birden fazla mağaza türünde alışveriş yapan müşterilerin toplam katkısı ölçüldü.
+- **Ortak Tablo İfadeleri (CTE)**: Karmaşık sorguların okunabilirliği ve tekrar kullanılabilir alt sorguların oluşturulması
+- **Örnek Çıktı:** En yüksek ciroya sahip müşterilerin alışveriş sıklıkları analiz edildi.
+- **Zaman Fonksiyonları**: `DATEPART()`, `DATEDIFF()` ile alışveriş yılına göre sipariş trendleri ve müşteri kazanımlarının analizi
+- **Örnek Çıktı:** Yıllara göre müşteri kazanımları ve sipariş yoğunlukları belirlendi.
+- **Koşullu Toplama ve Filtreleme**: `HAVING`, conditional aggregation ile segment bazlı alışveriş ve ciro bilgilerinin ayrıştırılması
+- **Örnek Çıktı:** Son 12 ayda en çok ilgi gören kategoriler hesaplandı. 
+- **JOIN & Alt Sorgular**: Kategori ve kanal kırılımlarında en değerli müşterilerin tespit edilmesi
+- **Örnek Çıktı:** Her kanal özelinde en çok alışveriş yapan müşteri belirlendi.
 
 ---
 
-## 📌 Aşağıda belirtilen analiz hakkında Üst Yönetim için Temel Bulgular ve Öneriler
+## 🎯 Ana Çıktılar
 
-### 1. Satış Performansı ve Trendler
+- Kanallara göre toplam ciro ve sipariş başına ortalama ciro hesaplandı.
+- Son 12 ayda en çok ilgi gören kategoriler tespit edildi.
+- Müşteri segmentleri alışveriş sıklığı, harcama gücü ve kanal tercihleri üzerinden oluşturuldu.
+- Yıllara göre müşteri kazanımı ve alışveriş trendleri analiz edildi.
+- En değerli müşteri grupları belirlendi ve sadakat ölçümleri yapıldı.
 
-**Temel Bulgular:**
-- 2010–2013 arasında güçlü bir büyüme eğilimi varken 2014’te hem satış hem müşteri sayısında keskin düşüş yaşanmış.
-- Kümülatif analizde büyüme ivmesi 2014’te belirgin şekilde zayıflamış.
-- Ortalama satış fiyatı yıllar içinde düşüş göstermiş (2011’de 3.146 → 2014’te 1.668).
 
-**✅Öneriler:**
-- 2014’teki düşüşün nedenleri (rekabet, pazar koşulları, ürün stratejisi) detaylı analiz edilmeli.
-- Fiyatlandırma politikası gözden geçirilmeli; gerekirse değer odaklı fiyat artışı uygulanmalı.
-- Büyümenin yüksek olduğu yıllardaki kampanya ve satış stratejileri yeniden devreye alınmalı.
+## 📌 Projenin Faydaları
 
-### 2. Ürün Performansı ve Portföy Yönetimi
+- **İş Zekâsı**: Müşteri segmentasyonu ile en değerli müşteri grupları ve alışveriş trendleri belirlenerek satış stratejileri güçlendirildi.
+- **Pazarlama Stratejisi**: Kategori ve kanal bazlı müşteri davranışları, kişiselleştirilmiş kampanyaların tasarlanmasına imkân sağladı.
+- **Kanal Optimizasyonu**: Online ve offline satış kanallarının verimliliği analiz edilerek, hangi kanalların daha fazla katkı sağladığı tespit edildi.
+- **Müşteri Deneyimi İyileştirme**: Alışveriş sıklığı ve kategori tercihlerine göre yapılan segmentasyon, müşteri deneyimini kişiselleştirerek memnuniyeti artırmaya yardımcı oldu.
 
-**Temel Bulgular:**
-- Satışların %96.46’sı bisiklet kategorisinden geliyor; aksesuar ve giyim kategorilerinin payı oldukça düşük.
-- Bazı ürünler yıllar içinde ortalamanın üzerinde performans gösterirken (Above Avg), bazıları sürekli ortalamanın altında kalmış (Below Avg).
-- “High-Performer” ürünler toplam gelirde kritik paya sahip; “Low-Performer” ürünlerin satış katkısı çok düşük.
-
-**✅Öneriler:**
-- Tek kategoriye (bisiklet) bağımlılığı azaltmak için aksesuar ve giyim satışlarını artırıcı pazarlama çalışmaları yapılmalı.
-- Sürekli düşük performans gösteren ürünlerde stok azaltma, fiyat indirimi veya ürün portföyünden çıkarma değerlendirilmelidir.
-- Yüksek performanslı ürünlerin stok ve tedarik sürekliliği güvence altına alınmalı.
-
-### 3. Müşteri Segmentasyonu ve Sadakat
-
-**Temel Bulgular:**
-- Müşterilerin %79.1’si “New” segmentinde; VIP müşteri oranı sadece %9 civarında.
-- VIP müşteriler yüksek harcama kapasitesine sahip ve uzun vadeli gelir potansiyeli taşıyor.
-- 30–50 yaş grubu müşteri kitlesi baskın durumda.
-
-**✅Öneriler:**
-- Yeni müşterilerin “Regular” veya “VIP” segmente geçişini hızlandırmak için sadakat programları uygulanmalı.
-- VIP müşterilere özel kampanyalar, avantajlı fiyatlar ve kişiselleştirilmiş hizmetler sunulmalı.
-- 30–50 yaş grubuna yönelik hedefli pazarlama stratejileri geliştirilmelidir.
-
-### 4. Fiyatlandırma ve Karlılık
-
-**Temel Bulgular:**
-- Ortalama satış fiyatındaki düşüş kâr marjını olumsuz etkileyebilir.
-- Bazı ürünlerde fiyat dalgalanmaları ve düşük fiyatla satış söz konusu.
-
-**✅Öneriler:**
-- Karlılık analizi yapılarak düşük fiyatlı ürünlerde fiyat optimizasyonu yapılmalı.
-- Yüksek talep gören ürünlerde kâr marjını artıracak fiyat güncellemeleri uygulanmalı.
+Veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş alışkanlıkları hakkında anlamlı çıkarımlar yapılmasını sağlayarak, stratejik kararlar için önemli bir veri kaynağı sunmaktadır.
 
 ---
 

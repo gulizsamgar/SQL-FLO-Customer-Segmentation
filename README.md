@@ -116,13 +116,11 @@ CREATE TABLE FLO (
 )
 ```
 
-- YÖNTEM 2:
-     
-*/
-Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
-	CUSTOMERS Database "sağ click"
-	-> Tasks -> İmoprt Flat File -> Specify Input File -> Browse -> "FLO.csv dosyasını seç" Open -> Next -> Next -> Next -> Finish -> Close
-*/
+- YÖNTEM 2: Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
+  
+	- CUSTOMERS Database "sağ click"
+	- -> Tasks -> İmoprt Flat File -> Specify Input File -> Browse -> "FLO.csv dosyasını seç" Open -> Next -> Next -> Next -> Finish -> Close
+
 
 
 

@@ -86,521 +86,408 @@ Veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş al�
 
 ## 📜 SQL Sorguları
 
-## Analiz Bölümleri
+## 1. Veri Yükleme & Tablo Oluşturma
 
-## 1. Zaman İçinde Değişim Analizi (Change Over Time Analysis)
+	- CUSTOMERS veritabanı oluşturma  
+	- FLO tablosunun manuel kolon tanımlama yöntemi  
+	- FLO.csv dosyasının import edilmesi*
 
-**Amaç:**
-- Zaman içinde temel metriklerdeki eğilimleri, büyümeyi ve değişiklikleri izlemek.
-- Zaman serisi analizi ve mevsimselliğin belirlenmesi için.
-- Belirli dönemlerdeki büyümeyi veya düşüşü ölçmek.
-
-<p></p>
-  <img width="1540" height="673" alt="image" src="https://github.com/user-attachments/assets/81477464-791c-499b-ac39-3685a4bbfa77" />
-<p></p>
-
-**Zaman içinde satış performansını analiz edin**
-**-Hızlı Tarih Fonksiyonları**
-
+**Customers isimli bir veritabanı ve verilen veri setindeki değişkenleri içerecek FLO isimli bir tablo oluşturunuz.**
 ```sql
-SELECT
-    YEAR(order_date) AS order_year,
-    MONTH(order_date) AS order_month,
-    SUM(sales_amount) AS total_sales,
-    COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(quantity) AS total_quantity
-FROM gold.fact_sales
-WHERE order_date IS NOT NULL
-GROUP BY YEAR(order_date), MONTH(order_date)
-ORDER BY YEAR(order_date), MONTH(order_date);
+CREATE DATABASE CUSTOMERS
 ```
 
-**Çıktı:**
-<p></p>
-<img width="1517" height="608" alt="image" src="https://github.com/user-attachments/assets/ee3354ed-6546-4ac4-a20a-1a9b6a44a8ce" />
-<p></p>	
-
-**- DATETRUNC()**
-
+- 1. YÖNTEM: FLO adlı tablonun kolonları kod ile oluşturulabilir:
 ```sql
-SELECT
-    DATETRUNC(month, order_date) AS order_date,
-    SUM(sales_amount) AS total_sales,
-    COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(quantity) AS total_quantity
-FROM gold.fact_sales
-WHERE order_date IS NOT NULL
-GROUP BY DATETRUNC(month, order_date)
-ORDER BY DATETRUNC(month, order_date);
+CREATE TABLE FLO (
+	master_id				VARCHAR(50),
+	order_channel				VARCHAR(50),
+	last_order_channel			VARCHAR(50),
+	first_order_date			DATE,
+	last_order_date				DATE,
+	last_order_date_online			DATE,
+	last_order_date_offline			DATE,
+	order_num_total_ever_online		INT,
+	order_num_total_ever_offline		INT,
+	customer_value_total_ever_offline	FLOAT,
+	customer_value_total_ever_online	FLOAT,
+	interested_in_categories_12		VARCHAR(50),
+	store_type				VARCHAR(10)
+)
 ```
 
-**Çıktı:**
-<p></p>
-<img width="1274" height="613" alt="image" src="https://github.com/user-attachments/assets/57199d82-9f7e-46e0-9b0a-8d58d9bb81ab" />
-<p></p>
+- 2. YÖNTEM:
+     
+*/
+Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
+	CUSTOMERS Database "sağ click"
+	-> Tasks -> İmoprt Flat File -> Specify Input File -> Browse -> "FLO.csv dosyasını seç" Open -> Next -> Next -> Next -> Finish -> Close
+*/
 
-**- FORMAT()**
 
+
+## 2. Temel İstatistikler & Özet Bilgiler
+
+**Kaç farklı müşterinin alışveriş yaptığını gösterecek sorguyu yazınız.**
 ```sql
-SELECT
-    FORMAT(order_date, 'yyyy-MMM') AS order_date,
-    SUM(sales_amount) AS total_sales,
-    COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(quantity) AS total_quantity
-FROM gold.fact_sales
-WHERE order_date IS NOT NULL
-GROUP BY FORMAT(order_date, 'yyyy-MMM')
-ORDER BY FORMAT(order_date, 'yyyy-MMM');
+SELECT COUNT(DISTINCT [master_id]) AS DISTINCT_KISI_SAYISI 
+FROM FLO;
 ```
 
-**Çıktı:**
-<p></p>
-<img width="1224" height="612" alt="image" src="https://github.com/user-attachments/assets/cea04d07-1150-4d32-b16b-ce7d3962df35" />
-<p></p>
+**Toplam yapılan alışveriş sayısı ve ciroyu getirecek sorguyu yazınız.**
+```sql
+SELECT 
+SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI,
+SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO
+FROM FLO;
+```
 
-## 2. Kümülatif Analiz (Cumulative Analysis)
+**Alışveriş başına ortalama ciroyu getirecek sorguyu yazınız.**
+```sql
+--SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) ToplamCiro
+--SUM(order_num_total_ever_online+order_num_total_ever_offline) ToplamSiparisMiktari
+ROUND(
+SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) /
+SUM(order_num_total_ever_online+order_num_total_ever_offline)
+,2) AS SIPARIS_ORT_CIRO 
+FROM FLO;
+```
 
-**Amaç:**
-- Temel metrikler için toplamları veya hareketli ortalamaları hesaplamak.
-- Performansı zaman içinde kümülatif olarak izlemek.
-- Büyüme analizi veya uzun vadeli eğilimleri belirlemek için kullanışlıdır.
 
-<p></p>
-<img width="1452" height="668" alt="image" src="https://github.com/user-attachments/assets/9090d077-882c-4494-8c80-151cc41f8459" />
-<p></p>
+## 3. Kanal & Mağaza Bazlı Analizler
 
-**Aylık toplam satışları ve zaman içindeki toplam satışları hesaplayın**
-
+**En son alışveriş yapılan kanal (last_order_channel) üzerinden yapılan alışverişlerin toplam ciro ve alışveriş sayılarını getirecek sorguyu yazınız.** 
 ```sql
 SELECT
-	order_date,
-	total_sales,
-	SUM(total_sales) OVER (PARTITION BY orde_date ORDER BY order_date) AS running_total_sales
+[last_order_channel] AS SON_ALISVERIS_KANALI ,
+SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO,
+SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI
+FROM FLO
+GROUP BY [last_order_channel] 
+ORDER BY TOPLAM_CIRO DESC; --Bonus: En yüksek toplam ciroya göre sıralandı.
+```
+
+**En son alışveriş yapılan kanal kırılımında alışveriş başına ortalama ciroyu hesaplayacak sorguyu yazınız.**
+```sql
+SELECT
+[last_order_channel] SIPARIS_KANALI,
+ROUND( SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) /
+SUM([order_num_total_ever_online]+[order_num_total_ever_offline]),2) AS SIPARIS_ORT_CIRO 
+FROM FLO
+GROUP BY [last_order_channel];
+```
+
+**Store type kırılımında elde edilen toplam ciroyu getiren sorguyu yazınız.**
+```sql
+SELECT 
+[store_type] AS MAGAZA_TURU,
+SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO
+FROM FLO
+GROUP BY [store_type];
+```
+
+**BONUS - > Store type icerisindeki verilerin parse edilmis hali.**
+```sql
+SELECT value,SUM(TOPLAM_CIRO/COUNT_)
+FROM
+(                                                   
+SELECT  [store_type] MAGAZATURU,                                                                                                                                        
+        (SELECT COUNT(VALUE) FROM  string_split([store_type],',') ) COUNT_,
+		-->COUNT(VALUE): liste içindeki değer sayısını hesaplıyor (ör. "A,B,C" için 3 olur).
+ 		-->string_split(store_type, ','): store_type sütunundaki virgülle ayrılmış değerleri parçalayıp  bir liste haline getiriyor.      
+        ROUND(SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]), 2) TOPLAM_CIRO 
+FROM FLO 
+GROUP BY [store_type]) T
+CROSS APPLY 
+(
+ SELECT  VALUE  FROM  string_split(T.MAGAZATURU,',')
+-->string_split(T.MAGAZATURU, ','): Yukarıdaki sorgudan gelen MAGAZATURU değerini alır ve virgülle ayrılmış olarak parçalayarak her bir türü (VALUE) bağımsız bir satır haline getirir.
+) D
+GROUP BY Value  -->CROSS APPLY ile elde edilen VALUE değerlerine göre veriyi gruplandırıyor. Yani her alt tür için sonuçlar elde ediliyor.
+```
+
+## 4. Zaman Bazlı Analizler
+
+**Yıl kırılımında alışveriş sayılarını getirecek sorguyu yazınız (Yıl olarak müşterinin ilk alışveriş tarihi (first_order_date) yılını baz alınız).**
+```sql
+SELECT
+DATEPART(YEAR,[first_order_date]) YIL,
+SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI
+FROM FLO
+GROUP BY DATEPART(YEAR,[first_order_date])
+ORDER BY 1; --Bonus: Yıl sütununa göre sıralandı.
+```
+
+**Son 12 ayda en çok ilgi gören kategoriyi getiren sorguyu yazınız.**
+```sql
+SELECT
+[interested_in_categories_12],
+COUNT([interested_in_categories_12]) FREKANS_BILGISI 
+FROM FLO
+GROUP BY [interested_in_categories_12]
+ORDER BY 2 DESC;
+```
+
+**En son alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız. (Max son tarihte birden fazla alışveriş yapan ID bulunmakta. Bunları da getiriniz.)**
+```sql
+SELECT [master_id],[last_order_date]
+FROM FLO
+WHERE [last_order_date]=(
+    SELECT MAX([last_order_date])
+	FROM FLO
+);
+```
+
+**BONUS - > GROUP BY yöntemi ile yapılmış cözüm**
+```sql
+SELECT master_id, last_order_date
+FROM FLO
+GROUP BY master_id, last_order_date
+HAVING last_order_date = (
+    SELECT MAX(last_order_date)
+    FROM FLO
+);
+```
+
+**BONUS - > Window Function (RANK) yöntemi ile yapılmış cözüm**
+```sql
+WITH RankedOrders AS (
+    SELECT 
+        master_id, 
+        last_order_date,
+        RANK() OVER (ORDER BY last_order_date DESC) AS rank
+    FROM FLO
+)
+SELECT master_id, last_order_date
+FROM RankedOrders
+WHERE rank = 1;
+```
+
+## 5. Kategori & Segment Analizleri
+
+**En çok tercih edilen store_type bilgisini getiren sorguyu yazınız.**
+```sql
+SELECT TOP 1
+[store_type] MAGAZA_TURU,
+COUNT([store_type]) FREKANS_BILGISI
+FROM FLO
+GROUP BY [store_type]
+ORDER BY 2 DESC;
+```
+
+**BONUS - > Window Function (ROWNUMBER) yöntemi ile yapılmış cözüm**
+```sql
+SELECT *
 FROM
 (
-    SELECT 
-        DATETRUNC(month, order_date) AS order_date,
-        SUM(sales_amount) AS total_sales,
-    FROM gold.fact_sales
-    WHERE order_date IS NOT NULL
-    GROUP BY DATETRUNC(month, order_date)
-) t
+   SELECT [store_type],COUNT([store_type]) FREKANS_BILGISI,
+       ROW_NUMBER() OVER (ORDER BY COUNT([store_type]) DESC) AS ROW_NUM
+   FROM FLO
+   GROUP BY [store_type] 
+)D
+WHERE ROW_NUM=1;
 ```
 
-**Çıktı:**
-<p></p>
-<img width="1237" height="873" alt="image" src="https://github.com/user-attachments/assets/d3f43375-ee68-4926-a8e6-7dc419c5dd70" />
-<p></p>	
-
-**Yıllık toplam satışları ve zaman içindeki satışların toplamını, </br>
-hareketli ortalama satış fiyatını hesaplayın**
-
+**En son alışveriş yapılan kanal (last_order_channel) bazında, en çok ilgi gören kategoriyi ve bu kategoriden ne kadarlık alışveriş yapıldığını getiren sorguyu yazınız.**
 ```sql
 SELECT
-	order_date,
-	total_sales,
-	SUM(total_sales) OVER (ORDER BY order_date) AS running_total_sales,
-	AVG(avg_price) OVER (ORDER BY order_date) AS moving_average_price
-FROM
-(
-    SELECT 
-        DATETRUNC(year, order_date) AS order_date,
-        SUM(sales_amount) AS total_sales,
-        AVG(price) AS avg_price
-    FROM gold.fact_sales
-    WHERE order_date IS NOT NULL
-    GROUP BY DATETRUNC(year, order_date)
-) t
-```
-
-**Çıktı:**
-<p></p>
-<img width="1892" height="434" alt="image" src="https://github.com/user-attachments/assets/67661054-e2df-41a7-bb30-2ce542b5e8c1" />
-<p></p>
-
-## 3. Performans Analizi (Year-over-Year, Month-over-Month)
-
-**Amaç:**
-- Ürünlerin, müşterilerin veya bölgelerin zaman içindeki performansını ölçmek.
-- Yüksek performans gösteren kuruluşları kıyaslamak ve belirlemek.
-- Yıllık trendleri ve büyümeyi izlemek.
-
-<p></p>
-<img width="1919" height="326" alt="image" src="https://github.com/user-attachments/assets/41983072-5c17-439c-9fe9-d1432a0c437b" />
-<p></p>
-
-**Ürünlerin yıllık performansını, satışların; hem ürünün ortalama satış performansıyla </br>
-hem de bir önceki yılın satışlarıyla karşılaştırarak analiz edin**
-
-```sql
-WITH yearly_product_sales AS (
-    SELECT
-        YEAR(f.order_date) AS order_year,
-        p.product_name,
-        SUM(f.sales_amount) AS current_sales
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_products p
-        ON f.product_key = p.product_key
-    WHERE f.order_date IS NOT NULL
-    GROUP BY 
-        YEAR(f.order_date),
-        p.product_name
-)
-SELECT
-    order_year,
-    product_name,
-    current_sales,
-    AVG(current_sales) OVER (PARTITION BY product_name) AS avg_sales,
-    current_sales - AVG(current_sales) OVER (PARTITION BY product_name) AS diff_avg,
-    CASE 
-        WHEN current_sales - AVG(current_sales) OVER (PARTITION BY product_name) > 0 THEN 'Above Avg'
-        WHEN current_sales - AVG(current_sales) OVER (PARTITION BY product_name) < 0 THEN 'Below Avg'
-        ELSE 'Avg'
-    END AS avg_change,
-    -- Yıldan yıla (Year-over-Year) Analiz
-    LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) AS py_sales,
-    current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) AS diff_py,
-    CASE 
-        WHEN current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) > 0 THEN 'Increase'
-        WHEN current_sales - LAG(current_sales) OVER (PARTITION BY product_name ORDER BY order_year) < 0 THEN 'Decrease'
-        ELSE 'No Change'
-    END AS py_change
-FROM yearly_product_sales
-ORDER BY product_name, order_year;
-```
-
-**Çıktı:**
-<p></p>
-<img width="2820" height="590" alt="image" src="https://github.com/user-attachments/assets/c8281fcf-01c5-47e8-8ecc-da7a5001763a" />
-<p></p>
-
-## 4. Parçadan Bütüne Analiz (Part-to-Whole Analysis)
-
-**Amaç:**
-- Boyutlar veya zaman dilimleri arasında performansı veya metrikleri karşılaştırmak.
-- Kategoriler arasındaki farklılıkları değerlendirmek.
-- A/B testi veya bölgesel karşılaştırmalar için kullanışlıdır.
-
-<p></p>
-<img width="1370" height="659" alt="image" src="https://github.com/user-attachments/assets/ac2fdd58-2470-4514-bbb1-eae95ac3835c" />
-<p></p>
-
-**Hangi kategoriler toplam satışlara en çok katkı sağlıyor?**
-
-```sql
-WITH category_sales AS (
-    SELECT
-        p.category,
-        SUM(f.sales_amount) AS total_sales
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_products p
-        ON p.product_key = f.product_key
-    GROUP BY p.category
-)
-SELECT
-    category,
-    total_sales,
-    SUM(total_sales) OVER () AS overall_sales,
-    ROUND((CAST(total_sales AS FLOAT) / SUM(total_sales) OVER ()) * 100, 2) AS percentage_of_total
-FROM category_sales
-ORDER BY total_sales DESC;
-```
-
-**Çıktı:**
-<p></p>
-<img width="1978" height="360" alt="image" src="https://github.com/user-attachments/assets/f5d18ca7-35f1-4101-ac8f-9dd2ef90d653" />
-<p></p>
-
-## 5. Veri Segmentasyon Analizi (Data Segmentation Analysis)
-
-**Amaç:**
-- Hedeflenen içgörüler için verileri anlamlı kategorilere ayırmak.
-- Müşteri segmentasyonu, ürün kategorizasyonu veya bölgesel analiz için.
-
-<p></p>
-<img width="1391" height="683" alt="image" src="https://github.com/user-attachments/assets/7f0968d1-3450-4e85-820f-bf15e73fe789" />
-<p></p>
-
-**Ürünleri maliyet aralıklarına göre segmentlere ayırın ve her segmente kaç ürünün düştüğünü sayın**
-
-```sql
-WITH product_segments AS (
-    SELECT
-        product_key,
-        product_name,
-        cost,
-        CASE 
-            WHEN cost < 100 THEN 'Below 100'
-            WHEN cost BETWEEN 100 AND 500 THEN '100-500'
-            WHEN cost BETWEEN 500 AND 1000 THEN '500-1000'
-            ELSE 'Above 1000'
-        END AS cost_range
-    FROM gold.dim_products
-)
-SELECT 
-    cost_range,
-    COUNT(product_key) AS total_products
-FROM product_segments
-GROUP BY cost_range
-ORDER BY total_products DESC;
-```
-
-**Çıktı:**
-<p></p>
-<img width="933" height="391" alt="image" src="https://github.com/user-attachments/assets/6893b905-27ae-4074-8f76-c36953853570" />
-<p></p>
-
-**Müşterileri harcama davranışlarına göre üç segmente ayırın:</br>**
-- VIP: En az 12 aylık geçmişi olan ve 5.000 €'dan fazla harcama yapan müşteriler.</br>
-- Regular: En az 12 aylık geçmişi olan ancak 5.000 € veya daha az harcama yapan müşteriler.</br>
-- New: Yaşam süreleri 12 aydan az olan müşteriler.</br>
-**Ve her gruba göre toplam müşteri sayısını bulun.**
-
-```sql
-WITH customer_spending AS (
-    SELECT
-        c.customer_key,
-        SUM(f.sales_amount) AS total_spending,
-        MIN(order_date) AS first_order,
-        MAX(order_date) AS last_order,
-        DATEDIFF(month, MIN(order_date), MAX(order_date)) AS lifespan
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_customers c
-        ON f.customer_key = c.customer_key
-    GROUP BY c.customer_key
-)
-SELECT 
-    customer_segment,
-    COUNT(customer_key) AS total_customers
-FROM (
-    SELECT 
-        customer_key,
-        CASE 
-            WHEN lifespan >= 12 AND total_spending > 5000 THEN 'VIP'
-            WHEN lifespan >= 12 AND total_spending <= 5000 THEN 'Regular'
-            ELSE 'New'
-        END AS customer_segment
-    FROM customer_spending
-) AS segmented_customers
-GROUP BY customer_segment
-ORDER BY total_customers DESC;
-```
-
-**Çıktı:**
-</p>
-<img width="1287" height="331" alt="image" src="https://github.com/user-attachments/assets/d81a2466-217c-4492-ab95-99f2c472c933" />
-</p>
-
-## Raporlama Bölümleri
-
-<p>
-<img width="1975" height="1598" alt="image" src="https://github.com/user-attachments/assets/5577518e-1a06-47a2-b123-e1d5875be7d4" />
-</p>
-
-## 6. Müşteri Raporu (Customer Report)
-
-**Amaç:**
-- Bu rapor, temel müşteri metriklerini ve davranışlarını bir araya getirir.
-
-```sql
--- =============================================================================
--- Rapor Oluştur: gold.report_customers
--- =============================================================================
-IF OBJECT_ID('gold.report_customers', 'V') IS NOT NULL
-    DROP VIEW gold.report_customers;
-GO
-
-CREATE VIEW gold.report_customers AS
-
-WITH base_query AS(
-/*---------------------------------------------------------------------------
-1) Base Query: Tablolardan temel sütunları alır
----------------------------------------------------------------------------*/
-SELECT
-f.order_number,
-f.product_key,
-f.order_date,
-f.sales_amount,
-f.quantity,
-c.customer_key,
-c.customer_number,
-CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
-DATEDIFF(year, c.birthdate, GETDATE()) age
-FROM gold.fact_sales f
-LEFT JOIN gold.dim_customers c
-ON c.customer_key = f.customer_key
-WHERE order_date IS NOT NULL)
-
-, customer_aggregation AS (
-/*---------------------------------------------------------------------------
-2) Customer Aggregations: Müşteri düzeyindeki temel ölçümleri özetler
----------------------------------------------------------------------------*/
-SELECT 
-	customer_key,
-	customer_number,
-	customer_name,
-	age,
-	COUNT(DISTINCT order_number) AS total_orders,
-	SUM(sales_amount) AS total_sales,
-	SUM(quantity) AS total_quantity,
-	COUNT(DISTINCT product_key) AS total_products,
-	MAX(order_date) AS last_order_date,
-	DATEDIFF(month, MIN(order_date), MAX(order_date)) AS lifespan
-FROM base_query
-GROUP BY 
-	customer_key,
-	customer_number,
-	customer_name,
-	age
-)
-SELECT
-customer_key,
-customer_number,
-customer_name,
-age,
-CASE 
-	 WHEN age < 20 THEN 'Under 20'
-	 WHEN age between 20 and 29 THEN '20-29'
-	 WHEN age between 30 and 39 THEN '30-39'
-	 WHEN age between 40 and 49 THEN '40-49'
-	 ELSE '50 and above'
-END AS age_group,
-CASE 
-    WHEN lifespan >= 12 AND total_sales > 5000 THEN 'VIP'
-    WHEN lifespan >= 12 AND total_sales <= 5000 THEN 'Regular'
-    ELSE 'New'
-END AS customer_segment,
-last_order_date,
-DATEDIFF(month, last_order_date, GETDATE()) AS recency,
-total_orders,
-total_sales,
-total_quantity,
-total_products
-lifespan,
--- Ortalama sipariş değerini (AOV) hesapla
-CASE WHEN total_sales = 0 THEN 0
-	 ELSE total_sales / total_orders
-END AS avg_order_value,
--- Ortalama aylık harcamayı hesaplayın
-CASE WHEN lifespan = 0 THEN total_sales
-     ELSE total_sales / lifespan
-END AS avg_monthly_spend
-
-FROM customer_aggregation
-```
-**Çıktı:**
-<p></p>
-<img width="2879" height="509" alt="image" src="https://github.com/user-attachments/assets/9703d925-9a90-441c-bc0b-c86393a546ff" />
-<p></p>
-
-
-## 7. Ürün Raporu (Product Report)
-
-**Amaç:**
-- Bu rapor, temel ürün metriklerini ve davranışlarını bir araya getirir.
-
-
-```sql
--- =============================================================================
--- Rapor Oluştur: gold.report_products
--- =============================================================================
-IF OBJECT_ID('gold.report_products', 'V') IS NOT NULL
-    DROP VIEW gold.report_products;
-GO
-
-CREATE VIEW gold.report_products AS
-
-WITH base_query AS (
-/*---------------------------------------------------------------------------
-1) Base Query: fact_sales ve dim_products'tan temel sütunları alır
----------------------------------------------------------------------------*/
-    SELECT
-	    f.order_number,
-        f.order_date,
-		f.customer_key,
-        f.sales_amount,
-        f.quantity,
-        p.product_key,
-        p.product_name,
-        p.category,
-        p.subcategory,
-        p.cost
-    FROM gold.fact_sales f
-    LEFT JOIN gold.dim_products p
-        ON f.product_key = p.product_key
-    WHERE order_date IS NOT NULL  -- only consider valid sales dates
+DISTINCT [last_order_channel] AS SIPARIS_KANALI,
+( 
+    SELECT TOP 1 [interested_in_categories_12]
+    FROM FLO 
+    WHERE [last_order_channel]=F.[last_order_channel] 
+    GROUP BY [interested_in_categories_12] 
+    ORDER BY SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) DESC
 ),
-
-product_aggregations AS (
-/*---------------------------------------------------------------------------
-2) Product Aggregations: Ürün düzeyindeki temel ölçümleri özetler
----------------------------------------------------------------------------*/
-SELECT
-    product_key,
-    product_name,
-    category,
-    subcategory,
-    cost,
-    DATEDIFF(MONTH, MIN(order_date), MAX(order_date)) AS lifespan,
-    MAX(order_date) AS last_sale_date,
-    COUNT(DISTINCT order_number) AS total_orders,
-	COUNT(DISTINCT customer_key) AS total_customers,
-    SUM(sales_amount) AS total_sales,
-    SUM(quantity) AS total_quantity,
-	ROUND(AVG(CAST(sales_amount AS FLOAT) / NULLIF(quantity, 0)),1) AS avg_selling_price
-FROM base_query
-
-GROUP BY
-    product_key,
-    product_name,
-    category,
-    subcategory,
-    cost
+(
+    SELECT TOP 1 SUM(order_num_total_ever_online+order_num_total_ever_offline) 
+    FROM FLO 
+    WHERE [last_order_channel]=F.[last_order_channel]
+    GROUP BY [interested_in_categories_12]
+    ORDER BY SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) DESC
 )
-
-/*---------------------------------------------------------------------------
-  3) Final Query: Tüm ürün sonuçlarını tek bir çıktıda birleştirir
----------------------------------------------------------------------------*/
-SELECT 
-	product_key,
-	product_name,
-	category,
-	subcategory,
-	cost,
-	last_sale_date,
-	DATEDIFF(MONTH, last_sale_date, GETDATE()) AS recency_in_months,
-	CASE
-		WHEN total_sales > 50000 THEN 'High-Performer'
-		WHEN total_sales >= 10000 THEN 'Mid-Range'
-		ELSE 'Low-Performer'
-	END AS product_segment,
-	lifespan,
-	total_orders,
-	total_sales,
-	total_quantity,
-	total_customers,
-	avg_selling_price,
-	-- Ortalama Sipariş Geliri (AOR)
-	CASE 
-		WHEN total_orders = 0 THEN 0
-		ELSE total_sales / total_orders
-	END AS avg_order_revenue,
-
-	-- Ortalama Aylık Gelir
-	CASE
-		WHEN lifespan = 0 THEN total_sales
-		ELSE total_sales / lifespan
-	END AS avg_monthly_revenue
-
-FROM product_aggregations
+FROM FLO F;
 ```
-**Çıktı:**
 
-<p></p>
-<img width="2878" height="819" alt="image" src="https://github.com/user-attachments/assets/72e59ff4-9e0e-427e-b402-392013ebc67a" />
-<p></p>
+**BONUS - > CROSS APPLY yontemi ile yapilmis cozum**
+```sql
+SELECT DISTINCT [last_order_channel] SIPARIS_KANALI ,D.EN_YUKSEK_ILGI_KATEGORISI,D.ILGI_KETEGORISI_TOPLAM_SIPARIS
+FROM FLO F
+CROSS APPLY 
+(
+	SELECT TOP 1 [interested_in_categories_12] EN_YUKSEK_ILGI_KATEGORISI ,SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) ILGI_KETEGORISI_TOPLAM_SIPARIS
+	FROM FLO   
+	WHERE [last_order_channel]=F.[last_order_channel]
+	GROUP BY [interested_in_categories_12]
+	ORDER BY
+	SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) DESC
+) D
+ORDER BY D.ILGI_KETEGORISI_TOPLAM_SIPARIS DESC;
+```
 
+## 6. Müşteri Bazlı Performans Analizi
 
+**En sık alışveriş yapan (sipariş sayısı bazında) kişinin ID’ sini getiren sorguyu yazınız.**
+```sql
+SELECT TOP 1 [master_id]
+FROM FLO
+GROUP BY [master_id]
+ORDER BY  SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) DESC;
+```
+
+**BONUS - > Window Function (ROWNUMBER) yöntemi ile yapılmış cözüm**
+```sql
+SELECT T.[master_id]
+FROM
+(
+     SELECT [master_id], 
+	        SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI,
+	        ROW_NUMBER() OVER (ORDER BY SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) DESC) AS ROW_NUM
+     FROM FLO
+	 GROUP BY [master_id]
+) T
+WHERE ROW_NUM=1;
+```
+
+**En çok (ciro bazında) alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız.**
+```sql
+SELECT TOP 1 [master_id]
+FROM FLO
+GROUP BY [master_id]
+ORDER BY  SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) DESC;
+```
+
+**En çok alışveriş yapan 100 kişinin alışveriş başına ortalama cirosunu yazınız.**
+```sql
+SELECT TOP 100 [master_id],
+SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) TOPLAM_CIRO,
+ROUND(SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online])/ 
+SUM([order_num_total_ever_online] + [order_num_total_ever_offline]),2) AS  SIPARIS_BASINA_ORT_CIRO
+FROM FLO 
+GROUP BY [master_id]
+ORDER BY TOPLAM_CIRO DESC;
+```
+
+**BONUS - > SUBQUERY yöntemiyle yapılmış çözüm**
+```sql
+SELECT  D.[master_id],
+        D.TOPLAM_CIRO,
+        ROUND((D.TOPLAM_CIRO / D.TOPLAM_SIPARIS_SAYISI),2) SIPARIS_BASINA_ORT_CIRO
+FROM
+(
+SELECT TOP 100 [master_id],
+		  SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) TOPLAM_CIRO,
+		  SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) TOPLAM_SIPARIS_SAYISI
+	FROM FLO 
+	GROUP BY [master_id]
+ORDER BY TOPLAM_CIRO DESC
+) D
+ORDER BY TOPLAM_CIRO DESC;
+```
+
+**BONUS - > SUBQUERY VE JOIN yöntemiyle yapılmış çözüm**
+```sql
+SELECT 
+     F.[master_id],
+	 A.TOPLAM_CIRO,
+     ROUND(
+           SUM(F.[customer_value_total_ever_offline] + F.[customer_value_total_ever_online]) /
+           SUM(F.[order_num_total_ever_online] + F.[order_num_total_ever_offline])
+		   ,2) AS SIPARIS_BASINA_ORT_CIRO
+FROM FLO F
+JOIN (
+    SELECT TOP 100
+        [master_id],
+        SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) AS TOPLAM_CIRO
+    FROM FLO
+    GROUP BY [master_id]
+    ORDER BY TOPLAM_CIRO DESC
+) AS A
+ON F.[master_id] = A.[master_id]
+GROUP BY F.[master_id],A.TOPLAM_CIRO 
+ORDER BY A.TOPLAM_CIRO DESC;
+```
+
+**En çok alışveriş yapan kişinin alışveriş başına ortalama cirosunu ve alışveriş yapma gün ortalamasını (alışveriş sıklığını) getiren sorguyu yazınız.**
+```sql
+SELECT D.[master_id],
+       D.TOPLAM_CIRO,
+	   D.TOPLAM_SIPARIS_SAYISI,
+       ROUND((D.TOPLAM_CIRO / D.TOPLAM_SIPARIS_SAYISI),2) SIPARIS_BASINA_ORTALAMA,
+	   DATEDIFF(DAY, first_order_date, last_order_date) ILK_SN_ALVRS_GUN_FRK,
+	   ROUND((DATEDIFF(DAY, first_order_date, last_order_date)/D.TOPLAM_SIPARIS_SAYISI ),1) ALISVERIS_GUN_ORT
+FROM
+(
+SELECT TOP 1 [master_id],[first_order_date] , [last_order_date],
+		   SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) TOPLAM_CIRO,
+		   SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) TOPLAM_SIPARIS_SAYISI
+	FROM FLO 
+	GROUP BY  [master_id],[first_order_date] , [last_order_date]
+    ORDER BY TOPLAM_CIRO DESC
+) D;
+```
+
+**BONUS - > WITH - Common Table Expression (CTE) yöntemi ile yapılmış çözüm**
+```sql
+WITH TOPCUSTOMER AS (
+    SELECT TOP 1 [master_id],[first_order_date] , [last_order_date],
+            SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) AS TOPLAM_CIRO,
+		    SUM([order_num_total_ever_online] + [order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI
+    FROM FLO
+    GROUP BY  [master_id],[first_order_date] , [last_order_date]
+    ORDER BY TOPLAM_CIRO DESC
+)
+SELECT 
+    TC.[master_id],
+	TC.TOPLAM_CIRO,
+	TC.TOPLAM_SIPARIS_SAYISI,
+    ROUND((TC.TOPLAM_CIRO / TC.TOPLAM_SIPARIS_SAYISI),2) SIPARIS_BASINA_ORTALAMA,
+	DATEDIFF(DAY, first_order_date, last_order_date) ILK_SN_ALVRS_GUN_FRK,
+    ROUND(TC.TOPLAM_CIRO / TC.TOPLAM_SIPARIS_SAYISI, 2) AS SIPARIS_BASINA_ORT_CIRO,
+    ROUND(
+        DATEDIFF(DAY, TC.[first_order_date], TC.[last_order_date]) / TC.TOPLAM_SIPARIS_SAYISI, 1) AS ALISVERIS_GUN_ORT
+FROM TOPCUSTOMER AS TC ;
+```
+	
+**En son alışveriş yapılan kanal (last_order_channel) kırılımında en çok alışveriş yapan müşteriyi getiren sorguyu yazınız.**
+```sql
+SELECT DISTINCT [last_order_channel] AS EN_SON_SIPARIS_KANALI,
+(
+	SELECT TOP 1 [master_id]
+	FROM FLO  
+	WHERE [last_order_channel]=F.[last_order_channel] 
+	GROUP BY [master_id]
+	ORDER BY 
+	SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) desc 
+) EN_COK_ALISVERIS_YAPAN_MUSTERI,
+(
+	SELECT top 1 SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online])
+	FROM FLO  
+	WHERE [last_order_channel]=F.[last_order_channel]
+	GROUP BY [master_id]
+	ORDER BY 
+	SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) desc 
+) CIRO
+FROM FLO F;
+```
+
+**BONUS - > CROSS APPLY yöntemi ile yapılmış cözüm**
+```sql
+SELECT DISTINCT [last_order_channel] AS EN_SON_SIPARIS_KANALI, D.EN_COK_ALISVERIS_YAPAN_MUSTERI, D.CIRO
+FROM FLO F
+CROSS APPLY 
+(
+    SELECT TOP 1 [master_id] EN_COK_ALISVERIS_YAPAN_MUSTERI,
+		          SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) CIRO
+	FROM FLO 
+	WHERE [last_order_channel]=F.[last_order_channel]
+	--Tabloda her satırda ki en son alışveriş yapılan kanal hücresi karşısına ilgili kayıttaki kanalın en çok alışveriş yapan müşterisini ve cirosunu getirir.
+	--WHERE satırı yazılmasaydı her kanalın karşısına tüm kayıtların en çok alışveriş yapan müşterisini ve cirosu gelirdi. Yani her kanalın karışısında aynı değer görünürdü.
+	GROUP BY [master_id]
+
+    ORDER BY CIRO DESC
+) D;
+```
 
 
 

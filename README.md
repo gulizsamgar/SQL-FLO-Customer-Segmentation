@@ -88,9 +88,9 @@ Veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş al�
 
 ## 1. Veri Yükleme & Tablo Oluşturma
 
-	- CUSTOMERS veritabanı oluşturma  
-	- FLO tablosunun manuel kolon tanımlama yöntemi  
-	- FLO.csv dosyasının import edilme yöntemi
+- CUSTOMERS veritabanı oluşturma  
+- FLO tablosunun manuel kolon tanımlama yöntemi  
+- FLO.csv dosyasının import edilme yöntemi
 
 **Customers isimli bir veritabanı ve verilen veri setindeki değişkenleri içerecek FLO isimli bir tablo oluşturunuz.**
 ```sql

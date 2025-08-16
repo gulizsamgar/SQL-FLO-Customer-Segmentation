@@ -1,4 +1,4 @@
-# 📈 SQL ile FLO Müşteri Segmentasyonu
+# 📊 SQL ile FLO Müşteri Segmentasyonu
 
 ## 🚀 Projeye Genel Bakış
 

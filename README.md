@@ -27,6 +27,9 @@ Projede aşağıdaki veri seti kullanıldı:
 <img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/91f5f6d3-babe-4f2b-ba64-fa76cf934f21" />
 <p></p>
 
+<img width="1198" height="628" alt="image" src="https://github.com/user-attachments/assets/1ee855d0-63a2-4ae9-bd4c-19a51cdc3702" />
+
+
 ---
 
 ## 🛠 Teknolojiler

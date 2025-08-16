@@ -1,8 +1,8 @@
 ﻿
 /*  
-
+===============================================================================
 # Flo Müşteri Segmentasyonu
-
+===============================================================================
 # Proje Teknikleri:
 -> Veri Yükleme ve Tablo Oluşturma
    - Manuel kolon tanımlama ve CSV dosyası yükleme
@@ -20,33 +20,25 @@
    - Karmaşık sorguların yönetimi
 -> Kanal Bazlı Performans Analizi
    - Alışveriş başına ortalama ciro hesaplama
-
+===============================================================================
 */
-
-# Flo Müşteri Segmentasyonu  
-
- 
-## 🧩 7. İleri SQL Teknikleri
-- Window Functions (`ROW_NUMBER`, `RANK`, `DENSE_RANK`) ile sıralamalar  
-- Subquery & JOIN ile müşteri analizi  
-- Common Table Expressions (CTE) ile karmaşık sorguların yönetimi  
-- CROSS APPLY ile kanal & kategori kırılımı  
-
  
 
 /*
 ===============================================================================
 1. Veri Yükleme & Tablo Oluşturma
+===============================================================================
 	- CUSTOMERS veritabanı oluşturma  
 	- FLO tablosunun manuel kolon tanımlama yöntemi  
 	- FLO.csv dosyasının import edilmesi*
 ===============================================================================
 */
 	
---1. Customers isimli bir veritabanı ve verilen veri setindeki değişkenleri içerecek FLO isimli bir tablo oluşturunuz.
+-- Customers isimli bir veritabanı ve verilen veri setindeki değişkenleri içerecek FLO isimli bir tablo oluşturunuz.
 CREATE DATABASE CUSTOMERS
 
-/*1. YÖNTEM: FLO adlı tablonun kolonları kod ile oluşturulabilir:
+/*1. YÖNTEM: 
+FLO adlı tablonun kolonları kod ile oluşturulabilir:
 CREATE TABLE FLO (
 	master_id				VARCHAR(50),
 	order_channel				VARCHAR(50),
@@ -64,8 +56,9 @@ CREATE TABLE FLO (
 )
 */
 
-/* 2. Yöntem: Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
-CUSTOMERS Database "sağ click"
+/* 2. YÖNTEM: 
+Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
+	CUSTOMERS Database "sağ click"
 	-> Tasks -> İmoprt Flat File -> Specify Input File -> Browse -> "FLO.csv dosyasını seç" Open -> Next -> Next -> Next -> Finish -> Close
 */
 
@@ -73,25 +66,26 @@ CUSTOMERS Database "sağ click"
 /*
 ===============================================================================
 2. Temel İstatistikler & Özet Bilgiler
+===============================================================================
 	- Farklı müşteri sayısı (`COUNT DISTINCT`)  
 	- Toplam alışveriş sayısı & toplam ciro  
 	- Alışveriş başına ortalama ciro  
 ===============================================================================
 */
 
---2. Kaç farklı müşterinin alışveriş yaptığını gösterecek sorguyu yazınız.
+-- Kaç farklı müşterinin alışveriş yaptığını gösterecek sorguyu yazınız.
 SELECT COUNT(DISTINCT [master_id]) AS DISTINCT_KISI_SAYISI 
 FROM FLO;
 
 
---3. Toplam yapılan alışveriş sayısı ve ciroyu getirecek sorguyu yazınız.
+-- Toplam yapılan alışveriş sayısı ve ciroyu getirecek sorguyu yazınız.
 SELECT 
 SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI,
 SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO
 FROM FLO;
 
 
---4. Alışveriş başına ortalama ciroyu getirecek sorguyu yazınız.
+-- Alışveriş başına ortalama ciroyu getirecek sorguyu yazınız.
 SELECT 
 --SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) ToplamCiro
 --SUM(order_num_total_ever_online+order_num_total_ever_offline) ToplamSiparisMiktari
@@ -105,14 +99,15 @@ FROM FLO;
 /*
 ===============================================================================
 3. Kanal & Mağaza Bazlı Analizler
+===============================================================================
 	- Son alışveriş kanalı bazında toplam ciro ve sipariş sayısı  
+	- Son alışveriş kanalı bazında alışveriş başına ortalama ciro 
 	- Store type kırılımında toplam ciro  
 	- CROSS APPLY ile store_type detay analizi* 
-	- Kanal bazında alışveriş başına ortalama ciro 
 ===============================================================================
 */
  	
---5. En son alışveriş yapılan kanal (last_order_channel) üzerinden yapılan alışverişlerin toplam ciro ve alışveriş sayılarını getirecek sorguyu yazınız.  
+-- En son alışveriş yapılan kanal (last_order_channel) üzerinden yapılan alışverişlerin toplam ciro ve alışveriş sayılarını getirecek sorguyu yazınız.  
 SELECT
 [last_order_channel] AS SON_ALISVERIS_KANALI ,
 SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO,
@@ -121,12 +116,23 @@ FROM FLO
 GROUP BY [last_order_channel] 
 ORDER BY TOPLAM_CIRO DESC; --Bonus: En yüksek toplam ciroya göre sıralandı.
 
---6. Store type kırılımında elde edilen toplam ciroyu getiren sorguyu yazınız.
+
+-- En son alışveriş yapılan kanal kırılımında alışveriş başına ortalama ciroyu hesaplayacak sorguyu yazınız.
+SELECT
+[last_order_channel] SIPARIS_KANALI,
+ROUND( SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) /
+SUM([order_num_total_ever_online]+[order_num_total_ever_offline]),2) AS SIPARIS_ORT_CIRO 
+FROM FLO
+GROUP BY [last_order_channel];
+
+
+-- Store type kırılımında elde edilen toplam ciroyu getiren sorguyu yazınız.
 SELECT 
 [store_type] AS MAGAZA_TURU,
 SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) AS TOPLAM_CIRO
 FROM FLO
 GROUP BY [store_type];
+
 
 --BONUS - > Store type icerisindeki verilerin parse edilmis hali.
 SELECT value,SUM(TOPLAM_CIRO/COUNT_)
@@ -147,13 +153,14 @@ GROUP BY Value  -->CROSS APPLY ile elde edilen VALUE değerlerine göre veriyi g
 /*
 ===============================================================================
 4. Zaman Bazlı Analizler
+===============================================================================
 	- Alışveriş yılına göre sipariş trendi  
 	- Son 12 ayda en çok ilgi gören kategori  
 	- En son alışveriş yapan müşteri
 ===============================================================================
 */
 	
---7. Yıl kırılımında alışveriş sayılarını getirecek sorguyu yazınız (Yıl olarak müşterinin ilk alışveriş tarihi (first_order_date) yılını baz alınız).
+-- Yıl kırılımında alışveriş sayılarını getirecek sorguyu yazınız (Yıl olarak müşterinin ilk alışveriş tarihi (first_order_date) yılını baz alınız).
 SELECT
 DATEPART(YEAR,[first_order_date]) YIL,
 SUM([order_num_total_ever_online]+[order_num_total_ever_offline]) AS TOPLAM_SIPARIS_SAYISI
@@ -162,7 +169,7 @@ GROUP BY DATEPART(YEAR,[first_order_date])
 ORDER BY 1; --Bonus: Yıl sütununa göre sıralandı.
 
 
---9. Son 12 ayda en çok ilgi gören kategoriyi getiren sorguyu yazınız.
+-- Son 12 ayda en çok ilgi gören kategoriyi getiren sorguyu yazınız.
 SELECT
 [interested_in_categories_12],
 COUNT([interested_in_categories_12]) FREKANS_BILGISI 
@@ -171,35 +178,48 @@ GROUP BY [interested_in_categories_12]
 ORDER BY 2 DESC;
 
 
-
-
-
-
---8. En son alışveriş yapılan kanal kırılımında alışveriş başına ortalama ciroyu hesaplayacak sorguyu yazınız.
-SELECT
-[last_order_channel] SIPARIS_KANALI,
-ROUND( SUM([customer_value_total_ever_offline]+[customer_value_total_ever_online]) /
-SUM([order_num_total_ever_online]+[order_num_total_ever_offline]),2) AS SIPARIS_ORT_CIRO 
+-- En son alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız. (Max son tarihte birden fazla alışveriş yapan ID bulunmakta. Bunları da getiriniz.) 
+SELECT [master_id],[last_order_date]
 FROM FLO
-GROUP BY [last_order_channel];
+WHERE [last_order_date]=(
+    SELECT MAX([last_order_date])
+	FROM FLO
+);
 
 
+--BONUS - > GROUP BY yöntemi ile yapılmış cözüm
+SELECT master_id, last_order_date
+FROM FLO
+GROUP BY master_id, last_order_date
+HAVING last_order_date = (
+    SELECT MAX(last_order_date)
+    FROM FLO
+);
 
+
+--BONUS - > Window Function (RANK) yöntemi ile yapılmış cözüm
+WITH RankedOrders AS (
+    SELECT 
+        master_id, 
+        last_order_date,
+        RANK() OVER (ORDER BY last_order_date DESC) AS rank
+    FROM FLO
+)
+SELECT master_id, last_order_date
+FROM RankedOrders
+WHERE rank = 1;
 
 
 /*
 ===============================================================================
-4. Zaman Bazlı Analizler
-	- İlk alışveriş yılına göre sipariş trendi  
-	- Son 12 ayda en çok ilgi gören kategori  
+5. Kategori & Segment Analizleri
+===============================================================================
+	- En çok tercih edilen store_type  
+	- Kanal bazında en çok ilgi gören kategori ve sipariş sayısı  
 ===============================================================================
 */
 
-## 🏷️ 5. Kategori & Segment Analizleri
-- En çok tercih edilen store_type  
-- Kanal bazında en çok ilgi gören kategori ve sipariş sayısı  
-
---10. En çok tercih edilen store_type bilgisini getiren sorguyu yazınız.
+-- En çok tercih edilen store_type bilgisini getiren sorguyu yazınız.
 SELECT TOP 1
 [store_type] MAGAZA_TURU,
 COUNT([store_type]) FREKANS_BILGISI
@@ -220,7 +240,7 @@ FROM
 WHERE ROW_NUM=1;
 
 
---11. En son alışveriş yapılan kanal (last_order_channel) bazında, en çok ilgi gören kategoriyi ve bu kategoriden ne kadarlık alışveriş yapıldığını getiren sorguyu yazınız.
+-- En son alışveriş yapılan kanal (last_order_channel) bazında, en çok ilgi gören kategoriyi ve bu kategoriden ne kadarlık alışveriş yapıldığını getiren sorguyu yazınız.
 SELECT
 DISTINCT [last_order_channel] AS SIPARIS_KANALI,
 ( 
@@ -258,6 +278,7 @@ ORDER BY D.ILGI_KETEGORISI_TOPLAM_SIPARIS DESC;
 /*
 ===============================================================================
 6. Müşteri Bazlı Performans Analizi
+===============================================================================
 	- En sık alışveriş yapan müşteri (sipariş sayısına göre)  
 	- En çok ciro yapan müşteri  
 	- En çok alışveriş yapan 100 müşterinin alışveriş başına ortalama cirosu  
@@ -266,7 +287,7 @@ ORDER BY D.ILGI_KETEGORISI_TOPLAM_SIPARIS DESC;
 ===============================================================================
 */
 
---12. En sık alışveriş yapan (sipariş sayısı bazında) kişinin ID’ sini getiren sorguyu yazınız.
+-- En sık alışveriş yapan (sipariş sayısı bazında) kişinin ID’ sini getiren sorguyu yazınız.
 SELECT TOP 1 [master_id]
 FROM FLO
 GROUP BY [master_id]
@@ -286,14 +307,14 @@ FROM
 WHERE ROW_NUM=1;
 
 
---13. En çok (ciro bazında) alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız.
+-- En çok (ciro bazında) alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız.
 SELECT TOP 1 [master_id]
 FROM FLO
 GROUP BY [master_id]
 ORDER BY  SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) DESC;
 
 
---14 En çok alışveriş yapan 100 kişinin alışveriş başına ortalama cirosunu yazınız.
+-- En çok alışveriş yapan 100 kişinin alışveriş başına ortalama cirosunu yazınız.
 SELECT TOP 100 [master_id],
 SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online]) TOPLAM_CIRO,
 ROUND(SUM([customer_value_total_ever_offline] + [customer_value_total_ever_online])/ 
@@ -341,7 +362,7 @@ GROUP BY F.[master_id],A.TOPLAM_CIRO
 ORDER BY A.TOPLAM_CIRO DESC;
 
 
---15. En çok alışveriş yapan kişinin alışveriş başına ortalama cirosunu ve alışveriş yapma gün ortalamasını (alışveriş sıklığını) getiren sorguyu yazınız.
+-- En çok alışveriş yapan kişinin alışveriş başına ortalama cirosunu ve alışveriş yapma gün ortalamasını (alışveriş sıklığını) getiren sorguyu yazınız.
 SELECT D.[master_id],
        D.TOPLAM_CIRO,
 	   D.TOPLAM_SIPARIS_SAYISI,
@@ -380,7 +401,7 @@ SELECT
 FROM TOPCUSTOMER AS TC ;
 
 	
---16. En son alışveriş yapılan kanal (last_order_channel) kırılımında en çok alışveriş yapan müşteriyi getiren sorguyu yazınız.
+-- En son alışveriş yapılan kanal (last_order_channel) kırılımında en çok alışveriş yapan müşteriyi getiren sorguyu yazınız.
 SELECT DISTINCT [last_order_channel] AS EN_SON_SIPARIS_KANALI,
 (
 	SELECT TOP 1 [master_id]
@@ -415,36 +436,6 @@ CROSS APPLY
 ) D;
 
 
---17. En son alışveriş yapan kişinin ID’ sini getiren sorguyu yazınız. (Max son tarihte birden fazla alışveriş yapan ID bulunmakta. Bunları da getiriniz.) 
-SELECT [master_id],[last_order_date]
-FROM FLO
-WHERE [last_order_date]=(
-    SELECT MAX([last_order_date])
-	FROM FLO
-);
-
-
---BONUS - > GROUP BY yöntemi ile yapılmış cözüm
-SELECT master_id, last_order_date
-FROM FLO
-GROUP BY master_id, last_order_date
-HAVING last_order_date = (
-    SELECT MAX(last_order_date)
-    FROM FLO
-);
-
-
---BONUS - > Window Function (RANK) yöntemi ile yapılmış cözüm
-WITH RankedOrders AS (
-    SELECT 
-        master_id, 
-        last_order_date,
-        RANK() OVER (ORDER BY last_order_date DESC) AS rank
-    FROM FLO
-)
-SELECT master_id, last_order_date
-FROM RankedOrders
-WHERE rank = 1;
 
 
 

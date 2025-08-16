@@ -97,7 +97,7 @@ Veri analizi tekniklerinin doğru kullanımıyla müşterilerin alışveriş al�
 CREATE DATABASE CUSTOMERS
 ```
 
-- 1. YÖNTEM: FLO adlı tablonun kolonları kod ile oluşturulabilir:
+- YÖNTEM 1: FLO adlı tablonun kolonları kod ile oluşturulabilir:
 ```sql
 CREATE TABLE FLO (
 	master_id				VARCHAR(50),
@@ -116,7 +116,7 @@ CREATE TABLE FLO (
 )
 ```
 
-- 2. YÖNTEM:
+- YÖNTEM 2:
      
 */
 Daha basit bir yöntem olan FLO veri setinin CSV dosyasını içeri aktarma işlemi yapılır:
